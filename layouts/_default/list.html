@@ -1,0 +1,22 @@
+{{ partial "header.html" . }}
+{{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+{{ $pages := .RegularPages.ByDate.Reverse }}
+{{ if $pages }}
+<div class="archive-groups">
+  {{ range $pages.GroupByDate "2006" }}
+  <section class="archive-year" aria-labelledby="year-{{ .Key }}">
+    <div class="archive-year-heading"><h2 id="year-{{ .Key }}">{{ .Key }}</h2><p>{{ len .Pages }} 篇文章</p></div>
+    <ul class="archive-list">
+      {{ range .Pages }}
+      <li>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01/02" }}</time>
+        <a href="{{ .RelPermalink }}">{{ .Title }}{{ if .Draft }} <span class="draft-label">草稿</span>{{ end }}</a>
+        <span aria-hidden="true">↗</span>
+      </li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+</div>
+{{ else }}<div class="empty-state"><span class="empty-mark" aria-hidden="true">—</span><p>还没有发布文章。</p></div>{{ end }}
+{{ partial "footer.html" . }}

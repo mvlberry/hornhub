@@ -1,0 +1,12 @@
+<nav class="menu" aria-label="主导航">
+  <ul>
+    {{ $current := . }}
+    {{ range .Site.Menus.main }}
+      {{ $active := or ($current.IsMenuCurrent .Menu .) ($current.HasMenuCurrent .Menu .) }}
+      {{ with .Page }}{{ if and .IsSection (eq .Section $current.Section) }}{{ $active = true }}{{ end }}{{ end }}
+      <li{{ if $active }} class="active"{{ end }}>
+        <a href="{{ .URL | relURL }}"{{ if $active }} aria-current="page"{{ end }}>{{ .Name }}</a>
+      </li>
+    {{ end }}
+  </ul>
+</nav>

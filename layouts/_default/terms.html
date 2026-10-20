@@ -1,0 +1,10 @@
+{{ partial "header.html" . }}
+{{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+{{ if .Data.Terms }}
+<ul class="topic-list">
+  {{ range .Data.Terms.Alphabetical }}
+  <li><a href="{{ .Page.RelPermalink }}"><span>{{ .Page.Title }}</span><span class="topic-count">{{ .Count }}</span></a></li>
+  {{ end }}
+</ul>
+{{ else }}<div class="empty-state"><span class="empty-mark" aria-hidden="true">—</span><p>暂无{{ .Title }}。</p></div>{{ end }}
+{{ partial "footer.html" . }}

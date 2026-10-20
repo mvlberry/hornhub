@@ -1,0 +1,80 @@
+name: Build and deploy Hugo to ECS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      HUGO_VERSION: "0.168.0"
+      SITE_URL: ${{ vars.SITE_URL }}
+      ECS_HOST: ${{ vars.ECS_HOST }}
+      ECS_PORT: ${{ vars.ECS_PORT }}
+      ECS_USER: ${{ vars.ECS_USER }}
+      ECS_TARGET: ${{ vars.ECS_TARGET }}
+      SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
+
+    steps:
+      - name: Checkout repository and Ivy theme
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Hugo Extended
+        uses: peaceiris/actions-hugo@f2acb7c5f695a87535fa8eb9040475c84c4f6909 # v3.2.1
+        with:
+          hugo-version: ${{ env.HUGO_VERSION }}
+          extended: true
+
+      - name: Build site
+        shell: bash
+        run: |
+          args=(--gc --minify --cleanDestinationDir)
+          if [[ -n "${SITE_URL}" ]]; then
+            args+=(--baseURL "${SITE_URL}")
+          fi
+          hugo "${args[@]}"
+
+      - name: Deploy public directory to ECS
+        shell: bash
+        run: |
+          : "${ECS_HOST:?Set the ECS_HOST repository variable}"
+          : "${ECS_USER:?Set the ECS_USER repository variable}"
+          : "${SSH_PRIVATE_KEY:?Set the ECS_SSH_KEY repository secret}"
+          : "${SSH_KNOWN_HOSTS:?Set the ECS_KNOWN_HOSTS repository secret}"
+
+          ECS_PORT="${ECS_PORT:-22}"
+          ECS_TARGET="${ECS_TARGET:-/var/www/ivy/}"
+          key_file="$(mktemp)"
+          trap 'rm -f "${key_file}"' EXIT
+
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > "${key_file}"
+          chmod 600 "${key_file}"
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "${SSH_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+          chmod 600 "${HOME}/.ssh/known_hosts"
+
+          rsync \
+            --archive \
+            --compress \
+            --checksum \
+            --delete-delay \
+            --human-readable \
+            --itemize-changes \
+            -e "ssh -i ${key_file} -p ${ECS_PORT} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            public/ \
+            "${ECS_USER}@${ECS_HOST}:${ECS_TARGET}"

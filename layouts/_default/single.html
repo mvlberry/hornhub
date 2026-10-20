@@ -1,0 +1,9 @@
+{{ partial "header.html" . }}
+<article class="prose">
+  {{ if .Params.show_toc }}<details class="article-toc" open><summary>目录</summary>{{ .TableOfContents }}</details>{{ end }}
+  {{ if .Content }}{{ .Content }}{{ else }}<p class="empty-copy">待续。</p>{{ end }}
+</article>
+{{ with .GetTerms "tags" }}
+<nav class="post-tags" aria-label="文章标签">{{ range . }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}</nav>
+{{ end }}
+{{ partial "footer.html" . }}

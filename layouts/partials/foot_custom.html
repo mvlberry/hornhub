@@ -1,0 +1,6 @@
+{{ if and .IsPage .Section (or .PrevInSection .NextInSection) }}
+<nav class="post-nav" aria-label="文章导航">
+  <div class="nav-prev">{{ with .PrevInSection }}<span>上一篇</span><a href="{{ .RelPermalink }}">← {{ .Title }}</a>{{ end }}</div>
+  <div class="nav-next">{{ with .NextInSection }}<span>下一篇</span><a href="{{ .RelPermalink }}">{{ .Title }} →</a>{{ end }}</div>
+</nav>
+{{ end }}

@@ -1,0 +1,11 @@
+      <footer class="site-footer">
+        {{ partial "foot_custom.html" . }}
+        <hr>
+        <div class="footer-line">
+          <div class="copyright">{{ with .Site.Params.footer }}{{ replace . "{Year}" now.Year | markdownify }}{{ else }}© {{ now.Year }} {{ .Site.Title }}{{ end }}</div>
+          <a class="footer-rss" href="{{ "index.xml" | relURL }}">RSS <span aria-hidden="true">↗</span></a>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

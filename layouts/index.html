@@ -1,0 +1,57 @@
+{{ partial "header.html" . }}
+{{ $hero := .Params.hero | default dict }}
+<section class="home-hero{{ if not $hero.current }} home-hero-solo{{ end }}" aria-labelledby="home-title">
+  <div class="home-hero-copy">
+    {{ with $hero.eyebrow }}<p class="eyebrow">{{ . }}</p>{{ end }}
+    <h1 id="home-title">{{ $hero.title | default .Site.Title }}{{ with $hero.emphasis }}<br><em>{{ . }}</em>{{ end }}</h1>
+    {{ with $hero.intro }}<p class="home-intro">{{ . }}</p>{{ end }}
+  </div>
+  {{ with $hero.current }}
+  <aside class="home-hero-aside">
+    <div class="home-current">
+      <span class="aside-label">{{ $hero.currentLabel | default "现在" }}</span>
+      <p>{{ . | markdownify }}</p>
+    </div>
+  </aside>
+  {{ end }}
+</section>
+
+{{ $posts := where .Site.RegularPages "Section" "in" .Site.Params.mainSections }}
+<section class="home-latest" aria-labelledby="latest-title">
+  <div class="home-section-heading">
+    <div>
+      <p class="eyebrow">LATEST WRITINGS</p>
+      <h2 id="latest-title">{{ .Params.latestTitle | default "最近写下的" }}</h2>
+    </div>
+    {{ with .Site.GetPage "/post" }}<a class="home-inline-link" href="{{ .RelPermalink }}">查看全部文章 <span aria-hidden="true">→</span></a>{{ end }}
+  </div>
+  {{ if $posts }}
+  <ul class="home-post-list">
+    {{ range first (.Params.latestCount | default 7) $posts.ByDate.Reverse }}
+    <li class="home-post-row">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006/01/02" }}</time>
+      <div class="home-post-copy">
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ if .Draft }} <span class="draft-label">草稿</span>{{ end }}</h3>
+        {{ with .Description | default (.Summary | plainify) }}<p>{{ . | plainify | truncate 120 }}</p>{{ end }}
+      </div>
+      <span class="home-row-arrow" aria-hidden="true">↗</span>
+    </li>
+    {{ end }}
+  </ul>
+  {{ else }}
+  <div class="empty-state"><span class="empty-mark" aria-hidden="true">—</span><p>还没有发布文章。</p></div>
+  {{ end }}
+</section>
+
+{{ with .Content }}
+<section class="home-note{{ if not $.Params.noteImage }} home-note-text{{ end }}">
+  {{ with $.Params.noteImage }}
+  <figure class="home-note-photo"><img src="{{ . | relURL }}" alt="{{ $.Params.noteImageAlt }}" loading="lazy" width="640" height="440"></figure>
+  {{ end }}
+  <div class="home-note-copy">
+    {{ with $.Params.noteLabel }}<p class="eyebrow">{{ . }}</p>{{ end }}
+    <div class="home-note-content">{{ . }}</div>
+  </div>
+</section>
+{{ end }}
+{{ partial "footer.html" . }}
