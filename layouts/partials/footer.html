@@ -5,6 +5,11 @@
           <div class="copyright">{{ with .Site.Params.footer }}{{ replace . "{Year}" now.Year | markdownify }}{{ else }}© {{ now.Year }} {{ .Site.Title }}{{ end }}</div>
           <a class="footer-rss" href="{{ "index.xml" | relURL }}">RSS <span aria-hidden="true">↗</span></a>
         </div>
+        {{ with .Site.Params.icp | strings.TrimSpace }}
+        <p class="footer-icp">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ . }}</a>
+        </p>
+        {{ end }}
       </footer>
     </main>
   </body>

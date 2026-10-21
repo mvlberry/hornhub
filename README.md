@@ -59,6 +59,20 @@ hugo --gc --minify --cleanDestinationDir
 
 生成结果在 `public/`，该目录不会提交到 Git。
 
+## 页脚备案号（私有配置）
+
+公共配置 `hugo.yaml` 中的 `params.icp` 默认留空；未配置时，不显示备案栏。
+
+本地在 `config/_default/params.yaml` 设置 `icp`，Hugo 会自动合并该配置，`hugo server` 无需额外参数：
+
+```yaml
+icp: '' # 填写自己的完整 ICP 备案号
+```
+
+该文件已被 Git 忽略，不要强制提交。线上在 GitHub Actions 的仓库 Secrets 中设置 `ICP_NUMBER`，构建步骤会通过 `HUGO_PARAMS_ICP` 覆盖同一个配置项。修改本地配置后，需自行同步更新 Secret。
+
+备案号在全站页脚底部居中显示，并链接工信部备案管理系统。此设置只避免号码进入开源源码和明文构建日志；网站 HTML 中的备案号仍是公开可见的。
+
 ## 首次连接 GitHub
 
 先在 GitHub 创建一个空仓库，然后执行：
@@ -125,6 +139,8 @@ Secrets：
 | `ECS_KNOWN_HOSTS` | ECS 的 SSH host key 记录 |
 
 这六项 Secrets 只在部署步骤中注入，避免在构建步骤的日志中出现连接参数。`SITE_URL` 是公开站点地址，保留为 Variable。本地 `.env` 不会随 Git 提交，也不会自动更新 GitHub Secrets；修改后需同步修改对应的 Secret。
+
+另可设置 `ICP_NUMBER` Secret 用于页脚备案号，仅在构建步骤中注入，详见上文的私有配置说明。
 
 获取 `ECS_KNOWN_HOSTS` 前，应先在 ECS 控制台终端执行 `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` 查看可信指纹，再在本机运行 `ssh-keyscan -p 22 YOUR_ECS_HOST`，确认指纹一致后把整行结果保存为 Secret。
 

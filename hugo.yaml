@@ -35,6 +35,7 @@ params:
   description: ''
   brandNote: ''
   footer: "&copy; {Year} 我的博客"
+  icp: ''
   mainSections: [post]
   summary_length: 180
 

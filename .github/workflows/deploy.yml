@@ -37,6 +37,7 @@ jobs:
         shell: bash
         env:
           SITE_URL: ${{ vars.SITE_URL }}
+          HUGO_PARAMS_ICP: ${{ secrets.ICP_NUMBER }}
         run: |
           args=(--gc --minify --cleanDestinationDir)
           if [[ -n "${SITE_URL}" ]]; then
