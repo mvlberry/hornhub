@@ -59,6 +59,42 @@ hugo --gc --minify --cleanDestinationDir
 
 生成结果在 `public/`，该目录不会提交到 Git。
 
+## NES 游戏页
+
+游戏页为 `/games/`，使用本站自托管的 JSNES 2.1.0。ROM 由站长通过 SSH/SFTP 上传到自己的服务器，网页读取 Nginx 的 JSON 目录列表，自动提供游戏选择。无需增加后台服务或数据库，也不依赖外部 CDN；仓库不附带 ROM。
+
+首次在 ECS 配置目录和 Nginx：
+
+1. 在站点根目录创建真正的 `roms/` 目录，所有者使用实际的 SSH 上传用户。沿用本文的 `deploy` 用户和默认站点目录时：
+
+   ```bash
+   sudo install -d -o deploy -g deploy -m 755 /var/www/ivy/roms
+   ```
+
+2. 将 `deploy/nginx-roms.conf.example` 上传并保存为 Nginx 配置片段，在**当前提供网站的 `server {}` 内**加入 `include /etc/nginx/snippets/ivy-roms.conf;`。片段继承该站点的 `root`，提供 `/roms/` JSON 列表，只允许读取目录中的直接 `.nes` 文件，拒绝其他文件、子目录和文件软链接。完整 `deploy/nginx-ivy.conf.example` 已内置同样规则，使用完整示例时无需再 include。
+3. 检查配置并重载。宿主机 Nginx 使用 `sudo nginx -t`，通过后 `sudo systemctl reload nginx`。已有 Docker Nginx 时，把片段放进现有配置的挂载目录，让 include 路径在**容器内**可见，再运行 `sudo docker exec nginx nginx -t`，通过后 `sudo docker exec nginx nginx -s reload`。保留现有 HTTPS 和其他服务配置。
+
+如果已有 `/var/www/ivy:/usr/share/nginx/html:ro` 挂载，宿主机上传路径 `/var/www/ivy/roms/` 就对应容器内 `/usr/share/nginx/html/roms/`；无需增加挂载或重建容器。若 `ECS_TARGET` 使用其他站点根目录，将上述宿主机路径替换为实际目录，并确保 Nginx 的 `root` 与之对应。
+
+之后添加游戏时，将有权公开分发的、未压缩 iNES `.nes` 文件上传到服务器的 `roms/`，文件名会成为列表中的游戏名。先上传为临时扩展名，完成后在服务器同一目录改名，避免访客读取尚未传完的文件：
+
+```bash
+scp game-one.nes deploy@YOUR_ECS_HOST:/var/www/ivy/roms/.game-one.nes.uploading
+ssh deploy@YOUR_ECS_HOST 'chmod 644 /var/www/ivy/roms/.game-one.nes.uploading && mv -- /var/www/ivy/roms/.game-one.nes.uploading /var/www/ivy/roms/game-one.nes'
+```
+
+也可以用 SFTP 完成上传、权限设置和改名。文件保持 Nginx 可读（通常目录 `755`、文件 `644`），只放在这一层目录。上传、改名或删除后，在游戏页刷新 ROM 列表即可选择，无需修改 YAML、提交 ROM 或重新构建网站。Actions 的 rsync 已排除整个 `/roms/` 目录，后续发布会保留服务器上自行上传的文件。
+
+ROM 限制为 8 MiB，不支持 ZIP、FDS、NES 2.0；部分映射器可能不兼容。也可以用“打开本地 ROM”直接玩电脑上的文件：只在浏览器中读取，不会上传。`hugo server` 不提供 Nginx JSON 目录列表，本地预览时可使用这个入口。
+
+点击游戏画面后，方向键或 WASD 移动，X=A、Z=B、Enter=Start、Shift=Select、空格=暂停。手机显示触控手柄。支持暂停/继续、重新开始、声音开关和浏览器支持时的全屏；切换窗口或隐藏页面会自动暂停。默认静音，不自动启动游戏，暂不持久保存游戏进度。
+
+服务器 `roms/` 只用于可公开分发的 ROM，目录本身不要使用软链接；文件名、大小、修改时间和 ROM 下载均对访客公开。不要放入密钥、配置或其他私有文件；本地 `.nes`、`.rom` 文件也已被 Git 忽略，防止误提交。需要只在自己浏览器中读取时，使用本地 ROM 入口。
+
+目录列表使用 Nginx 官方 [autoindex JSON 格式](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html#autoindex_format)，文件访问限制见 [Nginx 核心模块文档](https://nginx.org/en/docs/http/ngx_http_core_module.html#location)。
+
+运行测试：`node --test tests/nes-player.test.cjs`。测试只使用自写的合成 ROM，不包含商业游戏内容。
+
 ## 页脚备案号（私有配置）
 
 公共配置 `hugo.yaml` 中的 `params.icp` 默认留空；未配置时，不显示备案栏。
@@ -155,6 +191,7 @@ Secrets：
 - 主题模板覆盖：`layouts/`
 - 自动部署：`.github/workflows/deploy.yml`
 - Nginx 示例：`deploy/nginx-ivy.conf.example`
+- 现有 Nginx 的 ROM 列表配置片段：`deploy/nginx-roms.conf.example`
 
 升级主题前先预览差异：
 

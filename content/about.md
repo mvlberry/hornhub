@@ -1,4 +1,4 @@
 ---
-title: 关于
-description: ''
+title: GAME
+description: '偶尔怀旧也无大碍吧'
 ---

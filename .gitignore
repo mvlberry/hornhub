@@ -8,3 +8,7 @@
 /config/_default/params.yaml
 .DS_Store
 Thumbs.db
+
+# ROMs are uploaded directly to the server, never committed to this repository.
+*.[nN][eE][sS]
+*.[rR][oO][mM]

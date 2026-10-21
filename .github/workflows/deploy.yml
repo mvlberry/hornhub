@@ -71,11 +71,13 @@ jobs:
           printf '%s\n' "${SSH_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
           chmod 600 "${HOME}/.ssh/known_hosts"
 
+          # Protect server-uploaded ROMs from both replacement and --delete-delay.
           rsync \
             --archive \
             --compress \
             --checksum \
             --delete-delay \
+            --exclude='/roms/***' \
             --human-readable \
             --itemize-changes \
             -e "ssh -i ${key_file} -p ${ECS_PORT} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \

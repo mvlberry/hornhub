@@ -33,7 +33,7 @@
     <main class="main" id="main">
       {{ if not .IsHome }}
       <header class="title">
-        <p class="eyebrow">{{ if .IsPage }}{{ if .Section }}WRITING{{ else }}ABOUT{{ end }}{{ else if eq .Kind "term" }}TOPIC{{ else if eq .Kind "taxonomy" }}TOPICS{{ else }}ARCHIVE{{ end }}</p>
+        <p class="eyebrow">{{ if eq .Layout "games" }}PLAY{{ else if .IsPage }}{{ if .Section }}WRITING{{ else }}ABOUT{{ end }}{{ else if eq .Kind "term" }}TOPIC{{ else if eq .Kind "taxonomy" }}TOPICS{{ else }}ARCHIVE{{ end }}</p>
         <h1>{{ .Title }}</h1>
         {{ with .Params.subtitle }}<p class="subtitle">{{ . }}</p>{{ end }}
         {{ if and .IsPage .Section }}

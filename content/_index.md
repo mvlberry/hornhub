@@ -1,13 +1,13 @@
 ---
 title: 首页
 hero:
-  eyebrow: PERSONAL NOTES
-  title: 我的文字，
-  emphasis: 我的生活。
-  intro: ''
-  currentLabel: 现在
-  current: ''
-latestTitle: 最近写下的
+  eyebrow: mvlb3rry / note
+  title: 我们都在阴沟里，
+  emphasis: 但仍有人仰望星空。
+  intro: '——奥斯卡·王尔德'
+  currentLabel: game
+  current: '嘿，来玩玩游戏嘛'
+latestTitle: 最新
 latestCount: 7
 noteLabel: A FEW WORDS
 noteImage: ''

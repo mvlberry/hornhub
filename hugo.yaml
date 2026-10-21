@@ -21,12 +21,12 @@ menu:
     - name: 归档
       pageRef: /post
       weight: 20
-    - name: 关于
-      pageRef: /about
+    - name: 游戏
+      pageRef: /games
       weight: 30
-    - name: 标签
-      pageRef: /tags
-      weight: 40
+    # - name: 标签
+    #   pageRef: /tags
+    #   weight: 40
     - name: RSS
       url: /index.xml
       weight: 50

@@ -22,6 +22,34 @@ server {
         allow all;
     }
 
+    # Same rules as nginx-roms.conf.example. Keep roms/ a real directory.
+    location = /roms/ {
+        autoindex on;
+        autoindex_format json;
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+        limit_except GET {
+            deny all;
+        }
+    }
+
+    location ^~ /roms/ {
+        if ($uri !~* ^/roms/[^/.][^/]*\.nes$) {
+            return 404;
+        }
+        limit_except GET {
+            deny all;
+        }
+        disable_symlinks on;
+        types { }
+        default_type application/octet-stream;
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+        try_files $uri =404;
+    }
+
     location ~* \.(?:css|js|jpg|jpeg|png|gif|svg|webp|ico|woff2?)$ {
         expires 7d;
         add_header Cache-Control "public";

@@ -1,0 +1,31 @@
+# Include inside the server block that serves the Hugo site.
+# Inherits that server's root: /var/www/ivy on the host, or
+# /usr/share/nginx/html inside the existing Docker Nginx container.
+# Keep roms/ a real directory containing only publicly distributable ROMs.
+location = /roms/ {
+    autoindex on;
+    autoindex_format json;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    limit_except GET {
+        deny all;
+    }
+}
+
+# ^~ prevents generic CSS/JS/image locations from exposing other files here.
+location ^~ /roms/ {
+    if ($uri !~* ^/roms/[^/.][^/]*\.nes$) {
+        return 404;
+    }
+    limit_except GET {
+        deny all;
+    }
+    disable_symlinks on;
+    types { }
+    default_type application/octet-stream;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    try_files $uri =404;
+}
