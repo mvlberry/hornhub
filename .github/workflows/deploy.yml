@@ -19,13 +19,6 @@ jobs:
     environment: production
     env:
       HUGO_VERSION: "0.168.0"
-      SITE_URL: ${{ vars.SITE_URL }}
-      ECS_HOST: ${{ vars.ECS_HOST }}
-      ECS_PORT: ${{ vars.ECS_PORT }}
-      ECS_USER: ${{ vars.ECS_USER }}
-      ECS_TARGET: ${{ vars.ECS_TARGET }}
-      SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
-      SSH_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
 
     steps:
       - name: Checkout repository and Ivy theme
@@ -42,6 +35,8 @@ jobs:
 
       - name: Build site
         shell: bash
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
         run: |
           args=(--gc --minify --cleanDestinationDir)
           if [[ -n "${SITE_URL}" ]]; then
@@ -51,9 +46,16 @@ jobs:
 
       - name: Deploy public directory to ECS
         shell: bash
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+          ECS_TARGET: ${{ secrets.ECS_TARGET }}
+          SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
         run: |
-          : "${ECS_HOST:?Set the ECS_HOST repository variable}"
-          : "${ECS_USER:?Set the ECS_USER repository variable}"
+          : "${ECS_HOST:?Set the ECS_HOST repository secret}"
+          : "${ECS_USER:?Set the ECS_USER repository secret}"
           : "${SSH_PRIVATE_KEY:?Set the ECS_SSH_KEY repository secret}"
           : "${SSH_KNOWN_HOSTS:?Set the ECS_KNOWN_HOSTS repository secret}"
 

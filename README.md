@@ -112,17 +112,19 @@ Variables：
 | 名称 | 示例 | 说明 |
 | --- | --- | --- |
 | `SITE_URL` | `https://example.com/` | 站点正式地址，建议以 `/` 结尾 |
-| `ECS_HOST` | `203.0.113.10` | ECS 公网 IP 或域名 |
-| `ECS_PORT` | `22` | SSH 端口，可不填，默认 22 |
-| `ECS_USER` | `deploy` | 专用部署用户 |
-| `ECS_TARGET` | `/var/www/ivy/` | Nginx 站点目录，可不填 |
 
 Secrets：
 
 | 名称 | 内容 |
 | --- | --- |
+| `ECS_HOST` | ECS 公网 IP 或域名 |
+| `ECS_PORT` | SSH 端口，未设置时默认 22 |
+| `ECS_USER` | 部署用户 |
+| `ECS_TARGET` | Nginx 站点目录，未设置时默认 `/var/www/ivy/` |
 | `ECS_SSH_KEY` | 与 ECS 上部署公钥配对的私钥全文 |
 | `ECS_KNOWN_HOSTS` | ECS 的 SSH host key 记录 |
+
+这六项 Secrets 只在部署步骤中注入，避免在构建步骤的日志中出现连接参数。`SITE_URL` 是公开站点地址，保留为 Variable。本地 `.env` 不会随 Git 提交，也不会自动更新 GitHub Secrets；修改后需同步修改对应的 Secret。
 
 获取 `ECS_KNOWN_HOSTS` 前，应先在 ECS 控制台终端执行 `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` 查看可信指纹，再在本机运行 `ssh-keyscan -p 22 YOUR_ECS_HOST`，确认指纹一致后把整行结果保存为 Secret。
 
