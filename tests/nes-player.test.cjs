@@ -170,6 +170,171 @@ test('library refresh reports network errors and timeout, while cancellation sta
   await pending;
   assert.equal(states.length, beforeCancel);
 });
+test('library uses the same-directory static catalog when listing is forbidden or missing', async () => {
+  for (const status of [403, 404]) {
+    const requests = [], states = [];
+    let cancelled = false;
+    const denied = new Response(new ReadableStream({ cancel() { cancelled = true; } }), { status });
+    const library = rom.createRomLibrary({
+      directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+      async fetch(url, options) {
+        requests.push({ url, options });
+        return requests.length === 1 ? denied : listing([entry('超级 马里奥 #1%.nes')]);
+      },
+    });
+    await library.refresh();
+    assert(cancelled, 'Expected the directory error body to be cancelled before requesting the catalog');
+    assert.deepEqual(requests.map(request => request.url), [
+      'https://example.com/blog/roms/', 'https://example.com/blog/roms/index.json',
+    ]);
+    assert.equal(requests[0].options, requests[1].options);
+    assert.deepEqual({ ...requests[1].options, signal: undefined }, {
+      signal: undefined, mode: 'same-origin', credentials: 'same-origin', redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json' },
+    });
+    assert.equal(states.at(-1).state, 'ready');
+    assert.equal(states.at(-1).games[0].url, `https://example.com/blog/roms/${encodeURIComponent('超级 马里奥 #1%.nes')}`);
+  }
+});
+
+test('library does not request a fallback for successful, malformed, server-error or network responses', async () => {
+  for (const scenario of ['success', 'empty', 'malformed', 'server-error', 'network']) {
+    const requests = [], states = [];
+    const library = rom.createRomLibrary({
+      directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+      async fetch(url) {
+        requests.push(url);
+        if (scenario === 'network') throw new TypeError('Network failed');
+        if (scenario === 'server-error') return new Response('unavailable', { status: 503 });
+        if (scenario === 'malformed') return new Response('<html>not JSON</html>');
+        return listing(scenario === 'empty' ? [] : [entry('one.nes')]);
+      },
+    });
+    await library.refresh();
+    assert.equal(requests.length, 1, scenario);
+    assert.equal(states.at(-1).state, scenario === 'success' ? 'ready' : scenario === 'empty' ? 'empty' : 'error', scenario);
+  }
+});
+
+test('static catalog failures remain bounded errors without further fallback requests', async () => {
+  for (const scenario of ['missing', 'malformed', 'oversize']) {
+    const states = [];
+    let requests = 0;
+    const library = rom.createRomLibrary({
+      directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+      async fetch() {
+        if (++requests === 1) return new Response('forbidden', { status: 403 });
+        if (scenario === 'missing') return new Response('missing', { status: 404 });
+        if (scenario === 'malformed') return new Response('<html>not JSON</html>');
+        return new Response('[]', { headers: { 'Content-Length': String(rom.MAX_LIBRARY_BYTES + 1) } });
+      },
+    });
+    await library.refresh();
+    assert.equal(requests, 2, scenario);
+    assert.equal(states.at(-1).state, 'error', scenario);
+    assert.match(states.at(-1).message, scenario === 'oversize' ? /列表过大/ : /暂不可用/);
+  }
+});
+
+test('stale and cancelled directory errors never start a static catalog request', async () => {
+  const requests = [], states = [];
+  const library = rom.createRomLibrary({
+    directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+    fetch(url, options) { return new Promise(resolve => requests.push({ url, options, resolve })); },
+  });
+  const old = library.refresh();
+  const current = library.refresh();
+  requests[0].resolve(new Response('forbidden', { status: 403 }));
+  await old;
+  assert.equal(requests.length, 2);
+  requests[1].resolve(listing([entry('current.nes')]));
+  await current;
+  assert.equal(states.at(-1).games[0].title, 'current');
+
+  const cancelled = library.refresh();
+  const beforeCancel = states.length;
+  library.cancel();
+  requests[2].resolve(new Response('missing', { status: 404 }));
+  await cancelled;
+  assert.equal(requests.length, 3);
+  assert(requests[2].options.signal.aborted);
+  assert.equal(states.length, beforeCancel);
+});
+
+test('library rechecks cancellation after releasing a directory error body', async () => {
+  let releaseBody, bodyCancellation;
+  const cancelling = new Promise(resolve => { bodyCancellation = resolve; });
+  const requests = [], states = [];
+  const library = rom.createRomLibrary({
+    directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+    async fetch(url) {
+      requests.push(url);
+      return new Response(new ReadableStream({
+        cancel() { bodyCancellation(); return new Promise(resolve => { releaseBody = resolve; }); },
+      }), { status: 403 });
+    },
+  });
+  const pending = library.refresh();
+  await cancelling;
+  const beforeCancel = states.length;
+  library.cancel();
+  releaseBody();
+  await pending;
+  assert.equal(requests.length, 1);
+  assert.equal(states.length, beforeCancel);
+});
+
+test('replacing a pending static catalog aborts it and ignores its late result', async () => {
+  for (const failure of [false, true]) {
+    const requests = [], states = [];
+    const library = rom.createRomLibrary({
+      directory: libraryDirectory, base: libraryBase, onChange: state => states.push(state),
+      fetch(url, options) {
+        return new Promise((resolve, reject) => requests.push({ url, options, resolve, reject }));
+      },
+    });
+    const old = library.refresh();
+    requests[0].resolve(new Response('forbidden', { status: 403 }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[1].url, 'https://example.com/blog/roms/index.json');
+    const current = library.refresh();
+    assert(requests[1].options.signal.aborted);
+    requests[2].resolve(listing([entry('current.nes')]));
+    await current;
+    if (failure) requests[1].reject(new TypeError('Old catalog failed'));
+    else requests[1].resolve(listing([entry('old.nes')]));
+    await old;
+    assert.equal(states.at(-1).games[0].title, 'current');
+    assert(!states.some(state => state.state === 'error'));
+  }
+});
+
+test('static catalog shares the refresh timeout and explicit cancellation signal', async () => {
+  for (const cancel of [false, true]) {
+    const requests = [], states = [];
+    let fallbackStarted;
+    const started = new Promise(resolve => { fallbackStarted = resolve; });
+    const library = rom.createRomLibrary({
+      directory: libraryDirectory, base: libraryBase, timeoutMs: cancel ? 1000 : 10,
+      onChange: state => states.push(state),
+      fetch(url, options) {
+        requests.push({ url, options });
+        if (requests.length === 1) return Promise.resolve(new Response('missing', { status: 404 }));
+        fallbackStarted();
+        return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true }));
+      },
+    });
+    const pending = library.refresh();
+    await started;
+    if (cancel) library.cancel();
+    await pending;
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].options.signal, requests[1].options.signal);
+    assert(requests[1].options.signal.aborted);
+    if (cancel) assert.deepEqual(states.map(state => state.state), ['loading']);
+    else assert.match(states.at(-1).message, /超时/);
+  }
+});
+
 test('vendored core can execute an original synthetic test ROM', () => {
   const { NES } = require('../static/vendor/jsnes/2.1.0/jsnes.min.js');
   let frames = 0;

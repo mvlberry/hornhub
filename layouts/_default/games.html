@@ -10,7 +10,7 @@
       <select id="nes-rom-select" data-library-select aria-describedby="nes-library-status" disabled><option value="">正在读取游戏列表…</option></select>
       <button type="button" data-library-play disabled>开始游戏 <span aria-hidden="true">↗</span></button>
     </div>
-    <p class="game-library-status" id="nes-library-status" data-library-status role="status" aria-live="polite">正在读取服务器游戏列表…</p>
+    <p class="game-library-status" id="nes-library-status" data-library-status role="status" aria-live="polite">正在读取游戏列表…</p>
   </div>
   <div class="nes-player" data-nes-player data-state="empty" data-audio-worklet="{{ $worklet.RelPermalink }}">
     <div class="nes-topbar"><span class="nes-label"><span class="nes-power" aria-hidden="true"></span>NES <span class="nes-edition">/ 8-BIT CORNER</span></span><span class="nes-game-name" data-current-game>尚未插入卡带</span></div>
@@ -18,14 +18,14 @@
       <canvas width="256" height="240" aria-label="NES 游戏画面"></canvas>
       <div class="nes-overlay">
         <div class="nes-cartridge-icon" aria-hidden="true"><span></span></div>
-        <p class="nes-overlay-title" data-overlay-title>放入一盘卡带</p>
-        <p class="nes-overlay-hint" data-overlay-hint>从卡带架选择一款游戏，或打开自己的 .nes 文件。</p>
-        <button type="button" class="nes-open-button" data-action="open">打开本地 ROM <span aria-hidden="true">↗</span></button>
+        <p class="nes-overlay-title" data-overlay-title>选一盘游戏</p>
+        <p class="nes-overlay-hint" data-overlay-hint>从上方卡带架选择游戏，再点击「开始游戏」。</p>
+        <button type="button" class="nes-select-button" data-action="choose" disabled>选择游戏 <span aria-hidden="true">↗</span></button>
       </div>
     </div>
     <div class="nes-toolbar" aria-label="模拟器控制">
       <div class="nes-toolbar-group"><button type="button" data-action="pause" disabled>暂停</button><button type="button" data-action="restart" disabled>重新开始</button></div>
-      <div class="nes-toolbar-group"><button type="button" data-action="sound" aria-pressed="false" disabled>开启声音</button><button type="button" data-action="fullscreen">全屏</button><button type="button" data-action="open">换一盘 <span aria-hidden="true">↗</span></button></div>
+      <div class="nes-toolbar-group"><button type="button" data-action="sound" aria-pressed="false" disabled>开启声音</button><button type="button" data-action="fullscreen">全屏</button><button type="button" data-action="choose" disabled>换一盘 <span aria-hidden="true">↗</span></button></div>
     </div>
     <div class="nes-touch-controls" aria-label="触屏手柄">
       <div class="nes-dpad" aria-label="方向键">
@@ -34,11 +34,10 @@
       <div class="nes-system-buttons"><button type="button" data-nes-button="SELECT">SELECT</button><button type="button" data-nes-button="START">START</button></div>
       <div class="nes-action-buttons"><button type="button" data-nes-button="B" aria-label="B 键">B</button><button type="button" data-nes-button="A" aria-label="A 键">A</button></div>
     </div>
-    <input type="file" accept=".nes" data-rom-file hidden aria-label="选择本地 NES ROM">
   </div>
-  <div class="nes-below"><p class="nes-status" role="status" aria-live="polite">等待卡带 · 本地文件只在浏览器内读取，不会上传。</p><span class="nes-format">iNES / .nes / ≤ 8 MB</span></div>
+  <div class="nes-below"><p class="nes-status" role="status" aria-live="polite">从卡带架选一款游戏，点击「开始游戏」。</p><span class="nes-format">NES / 8-BIT</span></div>
   <div class="nes-key-guide" aria-label="键盘说明"><span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> / WASD 移动</span><span><kbd>X</kbd> A · <kbd>Z</kbd> B</span><span><kbd>Enter</kbd> 开始</span><span><kbd>Shift</kbd> 选择</span><span><kbd>Space</kbd> 暂停</span></div>
-  <p class="nes-footnote">点击画面后使用键盘，手机可使用下方手柄。切换到其他页面或窗口时会自动暂停。仅使用你有权使用的 ROM。</p>
+  <p class="nes-footnote">点击画面后使用键盘，手机可使用下方手柄。切换到其他页面或窗口时会自动暂停。</p>
   <noscript><p class="nes-noscript">模拟器需要 JavaScript。请开启 JavaScript 后刷新页面。</p></noscript>
 </section>
 <script src="{{ "vendor/jsnes/2.1.0/jsnes.min.js" | relURL }}" defer></script>

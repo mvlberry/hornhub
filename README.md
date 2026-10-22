@@ -61,9 +61,21 @@ hugo --gc --minify --cleanDestinationDir
 
 ## NES 游戏页
 
-游戏页为 `/games/`，使用本站自托管的 JSNES 2.1.0。ROM 由站长通过 SSH/SFTP 上传到自己的服务器，网页读取 Nginx 的 JSON 目录列表，自动提供游戏选择。无需增加后台服务或数据库，也不依赖外部 CDN；仓库不附带 ROM。
+游戏页为 `/games/`，使用本站自托管的 JSNES 2.1.0。访客从卡带架选择游戏，点击「开始游戏」即可游玩，无需选择本地文件。ROM 由站长通过 SSH/SFTP 上传到自己的服务器，不进入 Git。无需增加后台服务或数据库，也不依赖外部 CDN；仓库不附带 ROM。
 
-首次在 ECS 配置目录和 Nginx：
+页面优先读取 Nginx 的 JSON 目录列表；目录索引未启用、返回 403 或 404 时，自动读取同目录的 `index.json` 清单。已有服务器账号能上传网站文件时，可直接使用清单方式，无需管理员权限或重载 Nginx：
+
+1. 在服务器的网站根目录准备真实的 `roms/` 目录，通常为 `/var/www/ivy/roms/`，目录权限 `755`。
+2. 首次将 `deploy/update-rom-library.py` 上传到服务器，例如账号自己的 `~/.local/bin/update-rom-library.py`。它只处理目标目录中的直接、普通、完整 iNES 文件，忽略软链接、隐藏文件和其他格式，原子更新清单。
+3. 按下方方法上传 ROM，权限设为 `644`；随后运行：
+
+   ```bash
+   python3 ~/.local/bin/update-rom-library.py /var/www/ivy/roms/
+   ```
+
+4. 在游戏页点击「刷新列表」。之后每次上传、改名或删除 ROM，都再次运行上面的清单更新命令。ROM 和 `index.json` 均不会被后续网站部署覆盖或删除。
+
+如需上传后自动发现文件，也可以让管理员在 ECS 启用 Nginx JSON 目录索引：
 
 1. 在站点根目录创建真正的 `roms/` 目录，所有者使用实际的 SSH 上传用户。沿用本文的 `deploy` 用户和默认站点目录时：
 
@@ -83,17 +95,17 @@ scp game-one.nes deploy@YOUR_ECS_HOST:/var/www/ivy/roms/.game-one.nes.uploading
 ssh deploy@YOUR_ECS_HOST 'chmod 644 /var/www/ivy/roms/.game-one.nes.uploading && mv -- /var/www/ivy/roms/.game-one.nes.uploading /var/www/ivy/roms/game-one.nes'
 ```
 
-也可以用 SFTP 完成上传、权限设置和改名。文件保持 Nginx 可读（通常目录 `755`、文件 `644`），只放在这一层目录。上传、改名或删除后，在游戏页刷新 ROM 列表即可选择，无需修改 YAML、提交 ROM 或重新构建网站。Actions 的 rsync 已排除整个 `/roms/` 目录，后续发布会保留服务器上自行上传的文件。
+也可以用 SFTP 完成上传、权限设置和改名。文件保持 Nginx 可读（通常目录 `755`、文件 `644`），只放在这一层目录。使用清单方式时，上传、改名或删除后先运行清单更新命令；已启用 JSON 目录索引时直接刷新即可。无需修改 YAML、提交 ROM 或重新构建网站。Actions 的 rsync 已排除整个 `/roms/` 目录，后续发布会保留服务器上自行上传的文件。
 
-ROM 限制为 8 MiB，不支持 ZIP、FDS、NES 2.0；部分映射器可能不兼容。也可以用“打开本地 ROM”直接玩电脑上的文件：只在浏览器中读取，不会上传。`hugo server` 不提供 Nginx JSON 目录列表，本地预览时可使用这个入口。
+ROM 限制为 8 MiB，不支持 ZIP、FDS、NES 2.0；部分映射器可能不兼容。`hugo server` 不提供 Nginx JSON 目录列表；本地验证时可使用工作区外的临时 ROM 目录生成 `index.json`，并由静态服务器提供相同路径，避免将游戏文件加入项目。
 
 点击游戏画面后，方向键或 WASD 移动，X=A、Z=B、Enter=Start、Shift=Select、空格=暂停。手机显示触控手柄。支持暂停/继续、重新开始、声音开关和浏览器支持时的全屏；切换窗口或隐藏页面会自动暂停。默认静音，不自动启动游戏，暂不持久保存游戏进度。
 
-服务器 `roms/` 只用于可公开分发的 ROM，目录本身不要使用软链接；文件名、大小、修改时间和 ROM 下载均对访客公开。不要放入密钥、配置或其他私有文件；本地 `.nes`、`.rom` 文件也已被 Git 忽略，防止误提交。需要只在自己浏览器中读取时，使用本地 ROM 入口。
+服务器 `roms/` 用于公开提供 ROM，目录本身不要使用软链接；文件名、大小和 ROM 下载均对访客公开，目录索引还可能包含修改时间。上传前应确认相应的公开传播授权，老游戏、免费游玩和绕过 Git 不自动免除版权风险。不要放入密钥、配置或其他私有文件；本地 `.nes`、`.rom` 文件也已被 Git 忽略，防止误提交。仅用于私有保存的文件应放在网站根目录之外，并设置仅账号本人可访问的权限。
 
 目录列表使用 Nginx 官方 [autoindex JSON 格式](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html#autoindex_format)，文件访问限制见 [Nginx 核心模块文档](https://nginx.org/en/docs/http/ngx_http_core_module.html#location)。
 
-运行测试：`node --test tests/nes-player.test.cjs`。测试只使用自写的合成 ROM，不包含商业游戏内容。
+运行测试：`node --test tests/nes-player.test.cjs` 和 `python tests/rom-library.test.py`。测试只使用自写的合成 ROM，不包含商业游戏内容。
 
 ## 页脚备案号（私有配置）
 

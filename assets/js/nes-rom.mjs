@@ -84,12 +84,12 @@ async function readBoundedBytes(response, limit, tooLargeMessage) {
 export async function readRomDirectoryResponse(response, directory, base) {
   if (!response.ok) {
     await response.body?.cancel();
-    throw new Error('游戏列表暂不可用，请稍后刷新，也可以打开本地 ROM。');
+    throw new Error('游戏列表暂不可用，请稍后刷新。');
   }
   const bytes = await readBoundedBytes(response, MAX_LIBRARY_BYTES, '游戏列表过大，请联系站长整理后重试。');
   let entries;
   try { entries = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
-  catch { throw new Error('游戏列表暂不可用，请稍后刷新，也可以打开本地 ROM。'); }
+  catch { throw new Error('游戏列表暂不可用，请稍后刷新。'); }
   return parseRomDirectory(entries, directory, base);
 }
 
@@ -107,7 +107,14 @@ export function createRomLibrary({ directory, base, onChange, fetch: fetchReques
       onChange({ state: 'loading', games: [] });
       try {
         const url = romDirectoryURL(directory, base);
-        const response = await fetchRequest(url, { signal: controller.signal, mode: 'same-origin', credentials: 'same-origin', redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json' } });
+        const options = { signal: controller.signal, mode: 'same-origin', credentials: 'same-origin', redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json' } };
+        let response = await fetchRequest(url, options);
+        if (response.status === 403 || response.status === 404) {
+          await response.body?.cancel();
+          if (sequence !== revision) return;
+          if (controller.signal.aborted) throw new DOMException('Library reading aborted', 'AbortError');
+          response = await fetchRequest(new URL('index.json', url).href, options);
+        }
         const games = await readRomDirectoryResponse(response, url, base);
         if (sequence !== revision) return;
         if (controller.signal.aborted) throw new DOMException('Library reading aborted', 'AbortError');

@@ -1,4 +1,4 @@
-import { MAX_ROM_BYTES, validateRom, romURL, readRomResponse, createRomLibrary } from './nes-rom.mjs';
+import { validateRom, romURL, readRomResponse, createRomLibrary } from './nes-rom.mjs';
 
 const root = document.querySelector('[data-nes-player]');
 if (root) setupPlayer(root);
@@ -12,7 +12,6 @@ function setupPlayer(player) {
   const title = player.querySelector('[data-current-game]');
   const overlayTitle = player.querySelector('[data-overlay-title]');
   const overlayHint = player.querySelector('[data-overlay-hint]');
-  const fileInput = player.querySelector('[data-rom-file]');
   const control = action => player.querySelector(`[data-action="${action}"]`);
   const libraryElement = page.querySelector('[data-rom-library]');
   const librarySelect = libraryElement.querySelector('[data-library-select]');
@@ -151,8 +150,8 @@ function setupPlayer(player) {
       flushSamples();
     } catch {
       pause(false);
-      overlay('error', '这盘卡带暂时无法运行', '可尝试重新开始，或选择其他 iNES 格式 ROM。');
-      announce('ROM 运行异常，可能使用了暂不支持的映射器或指令。', true);
+      overlay('error', '这盘卡带暂时无法运行', '可尝试重新开始，或从卡带架选择其他游戏。');
+      announce('游戏运行异常，请重新开始或选择其他游戏。', true);
       return;
     }
     animation = requestAnimationFrame(tick);
@@ -183,7 +182,7 @@ function setupPlayer(player) {
       },
       onAudioSample: writeSample,
     });
-    try { candidate.loadROM(bytes); } catch { throw new Error('这份 ROM 暂不兼容，请尝试其他 iNES 格式 ROM。'); }
+    try { candidate.loadROM(bytes); } catch { throw new Error('这款游戏暂不兼容，请从卡带架选择其他游戏。'); }
     nes = candidate;
     romData = bytes;
     gameName = name;
@@ -199,7 +198,7 @@ function setupPlayer(player) {
     pause(false);
     loading = true;
     overlay('loading', '正在读取卡带', '稍等片刻，八位世界就要开始了。');
-    announce('正在加载 ROM…');
+    announce('正在加载游戏…');
     controls();
     try {
       const bytes = await read(controller.signal);
@@ -212,8 +211,8 @@ function setupPlayer(player) {
       if (sequence !== loadSequence) return;
       controller.abort();
       loading = false;
-      overlay('error', '卡带没有读出来', nes ? '上一盘游戏还在，可以点击「继续」，或换一份 ROM。' : '请检查文件格式，或换一份 ROM 再试。');
-      const message = timedOut ? '加载超时，请检查网络后重试。' : error.name === 'TypeError' ? '无法读取 ROM，请检查路径和网络后重试。' : error.message;
+      overlay('error', '卡带没有读出来', nes ? '上一盘游戏还在，可以点击「继续」，或从卡带架选择其他游戏。' : '请刷新列表重试，或从卡带架选择其他游戏。');
+      const message = timedOut ? '加载超时，请检查网络后重试。' : error.name === 'TypeError' ? '无法加载游戏，请检查网络后重试。' : error.message;
       announce(message, true);
     } finally {
       clearTimeout(timeout);
@@ -231,6 +230,7 @@ function setupPlayer(player) {
       libraryRefresh.disabled = state === 'loading';
       librarySelect.disabled = state !== 'ready';
       libraryPlay.disabled = state !== 'ready';
+      player.querySelectorAll('[data-action="choose"]').forEach(button => { button.disabled = state === 'loading'; });
       if (state === 'ready') {
         libraryGames = new Map(games.map(game => [game.url, game]));
         const options = games.map(game => {
@@ -249,7 +249,7 @@ function setupPlayer(player) {
         option.value = '';
         option.textContent = state === 'loading' ? '正在读取游戏列表…' : state === 'empty' ? '暂无可用游戏' : '游戏列表暂不可用';
         librarySelect.replaceChildren(option);
-        libraryStatus.textContent = state === 'loading' ? '正在读取服务器游戏列表…' : state === 'empty' ? '卡带架还是空的，稍后刷新看看，也可以打开本地 ROM。' : message;
+        libraryStatus.textContent = state === 'loading' ? '正在读取游戏列表…' : state === 'empty' ? '卡带架还是空的，稍后刷新看看。' : message;
       }
     },
   });
@@ -268,26 +268,20 @@ function setupPlayer(player) {
     }, game.title);
   });
   library.refresh();
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    fileInput.value = '';
-    load(async () => {
-      if (!/\.nes$/i.test(file.name)) throw new Error('请选择未压缩的 .nes 文件，不支持 ZIP 压缩包。');
-      if (file.size > MAX_ROM_BYTES) throw new Error('ROM 不能超过 8 MB。');
-      return validateRom(new Uint8Array(await file.arrayBuffer()));
-    }, file.name.replace(/\.nes$/i, ''));
-  });
   player.addEventListener('click', async event => {
     const button = event.target.closest('[data-action]');
     if (!button || button.disabled) return;
     switch (button.dataset.action) {
-      case 'open': fileInput.click(); break;
+      case 'choose':
+        if (running) pause();
+        libraryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (librarySelect.disabled ? libraryRefresh : librarySelect).focus({ preventScroll: true });
+        break;
       case 'pause': running ? pause() : start(); break;
       case 'restart':
         pause(false);
         try { install(romData, gameName); start(); }
-        catch { overlay('error', '这盘卡带暂时无法运行', '请重新选择 ROM。'); announce('重新开始失败，请重新选择 ROM。', true); }
+        catch { overlay('error', '这盘卡带暂时无法运行', '请从卡带架选择其他游戏。'); announce('重新开始失败，请选择其他游戏。', true); }
         break;
       case 'sound':
         muted = !muted;
@@ -350,7 +344,7 @@ function setupPlayer(player) {
     request?.abort();
     loading = false;
     pause(false);
-    if (!nes) overlay('empty', '放入一盘卡带', '从卡带架选择一款游戏，或打开自己的 .nes 文件。');
+    if (!nes) overlay('empty', '选一盘游戏', '从上方卡带架选择游戏，再点击「开始游戏」。');
     if (!event.persisted) audioContext?.close().catch(() => {});
   });
   window.addEventListener('pageshow', event => { if (event.persisted) library.refresh(); });

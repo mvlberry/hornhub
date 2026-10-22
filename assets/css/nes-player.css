@@ -33,9 +33,9 @@
 .nes-cartridge-icon span { display: block; height: 23px; margin-top: 12px; border: 1px solid #72776770; border-bottom: 3px solid #ad5346; }
 .nes-overlay-title { margin: 0; color: #d7dacd; font: 500 23px/1.6 var(--elizen-serif); }
 .nes-overlay-hint { max-width: 300px; margin: 0; color: #a1a698; font: 400 12px/1.9 var(--elizen-sans); }
-.nes-open-button { margin-top: 7px; padding: 10px 16px; border: 1px solid #686e60; border-radius: 2px; background: transparent; color: #d7dacd; font-size: 12px; }
-.nes-open-button:hover { border-color: #c0c8b3; }
-[data-state="loading"] .nes-open-button, [data-state="paused"] .nes-open-button, [data-state="paused"] .nes-cartridge-icon { display: none; }
+.nes-select-button { margin-top: 7px; padding: 10px 16px; border: 1px solid #686e60; border-radius: 2px; background: transparent; color: #d7dacd; font-size: 12px; }
+.nes-select-button:not(:disabled):hover { border-color: #c0c8b3; }
+[data-state="loading"] .nes-select-button, [data-state="paused"] .nes-select-button, [data-state="paused"] .nes-cartridge-icon { display: none; }
 .nes-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 13px 18px; border-top: 1px solid #363834; }
 .nes-toolbar-group { display: flex; gap: 6px 16px; flex-wrap: wrap; }
 .nes-toolbar button { min-height: 30px; padding: 4px 0; border: 0; background: transparent; color: #c2c7b9; font-size: 11px; }
