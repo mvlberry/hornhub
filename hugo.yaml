@@ -3,7 +3,7 @@ locale: zh-CN
 defaultContentLanguage: zh
 hasCJKLanguage: true
 timeZone: Asia/Shanghai
-title: 我的博客
+title: mvlb3rry的散文
 theme: hugo-ivy
 
 enableRobotsTXT: true
@@ -34,7 +34,7 @@ menu:
 params:
   description: ''
   brandNote: ''
-  footer: "&copy; {Year} 我的博客"
+  footer: "&copy; {Year} mvlb3rry的散文"
   icp: ''
   mainSections: [post]
   summary_length: 180

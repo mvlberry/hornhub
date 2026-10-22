@@ -1,8 +1,10 @@
 ---
 title: 孙宇晨访谈摘记：更新认知，多去创造
-date: 2026-10-21T00:00:00+08:00
+date: 2026-10-12T00:00:00+08:00
 draft: false
 slug: sunyuchen-alan-interview
+aliases:
+  - /post/2026/10/21/sunyuchen-alan-interview/
 description: 从四个多小时的对话里，摘下关于 AI、选择、身体、自由与创造的六个要点。
 tags:
   - 访谈笔记
