@@ -453,8 +453,7 @@ body {
 }
 
 .home-hero {
-  min-height: 482px;
-  padding: 112px 0 92px;
+  padding: 96px 0 80px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 250px;
   align-items: end;
@@ -474,20 +473,30 @@ body {
   margin: 0;
   color: var(--elizen-ink);
   text-align: left;
-  font: 600 clamp(42px, 5.6vw, 70px)/1.12 var(--elizen-serif);
-  letter-spacing: -.08em;
+  font: 500 clamp(26px, 3.2vw, 38px)/1.6 var(--elizen-serif);
+  letter-spacing: .01em;
+}
+
+.home-hero-lead {
+  display: block;
+  white-space: pre-line;
 }
 
 .home-hero h1 em {
-  color: var(--elizen-muted);
+  display: block;
+  margin-top: .12em;
+  color: var(--elizen-ink);
+  font-size: 1.35em;
+  font-weight: 600;
   font-style: normal;
+  line-height: 1.35;
 }
 
 .home-intro {
   max-width: 410px;
-  margin: 30px 0 0;
+  margin: 24px 0 0;
   color: var(--elizen-muted);
-  font: 400 16px/1.9 var(--elizen-serif);
+  font: 400 14px/1.9 var(--elizen-serif);
 }
 
 .home-hero-aside {
@@ -698,10 +707,6 @@ body {
     grid-template-columns: minmax(0, 1fr) 210px;
     gap: 48px;
   }
-
-  .home-hero h1 {
-    font-size: clamp(42px, 7vw, 60px);
-  }
 }
 
 @media screen and (max-width: 760px) {
@@ -725,13 +730,8 @@ body {
     display: block;
   }
 
-  .home-hero h1 {
-    font-size: 43px;
-  }
-
   .home-intro {
-    margin-top: 24px;
-    font-size: 15px;
+    margin-top: 20px;
   }
 
   .home-hero-aside {

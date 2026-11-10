@@ -3,7 +3,7 @@
 <section class="home-hero{{ if not $hero.current }} home-hero-solo{{ end }}" aria-labelledby="home-title">
   <div class="home-hero-copy">
     {{ with $hero.eyebrow }}<p class="eyebrow">{{ . }}</p>{{ end }}
-    <h1 id="home-title">{{ $hero.title | default .Site.Title }}{{ with $hero.emphasis }}<br><em>{{ . }}</em>{{ end }}</h1>
+    <h1 id="home-title"><span class="home-hero-lead">{{ $hero.title | default .Site.Title }}</span>{{ with $hero.emphasis }}<em>{{ . }}</em>{{ end }}</h1>
     {{ with $hero.intro }}<p class="home-intro">{{ . }}</p>{{ end }}
   </div>
   {{ with $hero.current }}

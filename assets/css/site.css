@@ -212,7 +212,7 @@ code, pre { font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 }
 @media (max-width: 760px) {
   .masthead { padding-right: 20px; padding-left: 20px; }
-  .home-hero h1 { font-size: clamp(34px, 10.8vw, 43px); }
+  .home-hero h1 { font-size: clamp(20px, 5.6vw, 28px); }
   .home-hero-solo { padding: 68px 0; }
   .home-post-row:hover { padding-right: 0; padding-left: 0; }
   .home-row-arrow { opacity: 1; }

@@ -7,7 +7,7 @@
 ## 填写自己的内容
 
 - `hugo.yaml`：修改 `title`（站名）、`params.brandNote`（站名旁小字）、`params.description`、`params.footer` 和导航。
-- `content/_index.md`：修改 `hero.title`、`hero.emphasis`（标题第二行）、`hero.intro`（介绍）以及 `hero.current`（“现在”栏）。空字段不显示。`latestCount` 控制首页文章数。
+- `content/_index.md`：修改 `hero.title`、`hero.emphasis`（末尾重点句）、`hero.intro`（介绍）以及 `hero.current`（“现在”栏）。`hero.title` 可使用 YAML 多行文本按句意换行。空字段不显示。`latestCount` 控制首页文章数。
 - 在 `content/_index.md` 的第二个 `---` 后写 Markdown，可显示首页底部寄语；`noteImage` 可填写自己的图片地址，`noteImageAlt` 填图片说明。不填正文时整块隐藏。
 - `content/about.md`：在第二个 `---` 后填写个人简介。
 - `content/post/`：存放文章。首页、归档、标签会自动从文章生成。
